@@ -1,0 +1,55 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import LabelEncoder
+
+# Load and preprocess the data (assuming balance_df is created as in your notebook)
+# If you haven't created balance_df, you can load the data and preprocess it as follows
+df = pd.read_csv("cust_satisfaction.csv")
+df.head()
+df.drop_duplicates(inplace=True)
+df.dropna(inplace=True)
+
+# Balance the dataset
+loyal_customer = df[df['Customer Type'] == 'Loyal Customer'].sample(20000, random_state=42)
+disloyal_customer = df[df['Customer Type'] == 'disloyal Customer']
+balance_df = pd.concat([loyal_customer, disloyal_customer], axis=0)
+
+# Encode the target variable
+le = LabelEncoder()
+balance_df['satisfaction'] = le.fit_transform(balance_df['satisfaction'])  # 0: neutral or dissatisfied, 1: satisfied
+
+# Select one feature for simplicity (e.g., Flight Distance)
+X = balance_df[['Flight Distance']].values  # Using Flight Distance as the feature
+y = balance_df['satisfaction'].values
+
+# Scale the feature
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Train logistic regression model
+model = LogisticRegression(random_state=42)
+model.fit(X_scaled, y)
+
+# Generate values for plotting the sigmoid curve
+x_range = np.linspace(X_scaled.min(), X_scaled.max(), 300).reshape(-1, 1)  # Scaled feature range
+z = model.coef_[0] * x_range + model.intercept_  # Linear combination: z = wx + b
+sigmoid = 1 / (1 + np.exp(-z))  # Sigmoid function: 1 / (1 + e^(-z))
+
+# Inverse transform x_range to original scale for plotting
+x_range_original = scaler.inverse_transform(x_range)
+
+# Plot the sigmoid curve and data points
+plt.figure(figsize=(10, 6))
+plt.plot(x_range_original, sigmoid, label='Sigmoid Curve', color='blue')
+plt.scatter(balance_df['Flight Distance'], y, c=y, cmap='bwr', alpha=0.2, label='Data Points')
+plt.title('Sigmoid Function for Logistic Regression (Flight Distance)')
+plt.xlabel('Flight Distance')
+plt.ylabel('Probability of Satisfaction (0 or 1)')
+plt.axhline(y=0.5, color='gray', linestyle='--', alpha=0.5)
+plt.axvline(x=scaler.inverse_transform([[0]])[0], color='gray', linestyle='--', alpha=0.5)
+plt.grid(True)
+plt.legend()
+plt.show()
