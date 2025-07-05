@@ -1,0 +1,238 @@
+<!-- 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mail identifier</title>
+</head>
+<body>
+    {% if prediction=="0" %}
+    <center><p style="margin-top: 300px; font-size: 50px;">Your mail is :- Ham</p></center>
+{% else %}
+<center><p style="margin-top: 300px; font-size: 50px;">Your mail is :- Spam</p></center>
+{% endif %}
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Result</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #ffffff;
+            --secondary-color: #e0e0e0;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --font-family: 'Poppins', sans-serif;
+            
+            /* Gradient for both backgrounds */
+            --gradient-start-safe: #00c97b;
+            --gradient-end-safe: #00b09b;
+            --gradient-start-spam: #ff5f6d;
+            --gradient-end-spam: #ffc371;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            /* The background will be set by a class based on the result */
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            transition: background 0.5s ease-in-out;
+        }
+        
+        /* Specific background for "Not Spam" */
+        body.safe {
+            background: linear-gradient(-45deg, var(--gradient-end-safe), var(--gradient-start-safe), #00b09b, #00c97b);
+            background-size: 400% 400%;
+        }
+        
+        /* Specific background for "Spam" */
+        body.spam {
+             background: linear-gradient(-45deg, var(--gradient-end-spam), var(--gradient-start-spam), #ffc371, #ff5f6d);
+             background-size: 400% 400%;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 3rem 2.5rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 var(--shadow-color);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .result-icon {
+            margin: 0 auto 1.5rem auto;
+            width: 100px;
+            height: 100px;
+        }
+        
+        /* --- Animated Checkmark (Not Spam) --- */
+        .checkmark-circle {
+            stroke-dasharray: 264;
+            stroke-dashoffset: 264;
+            animation: draw-circle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+        .checkmark-check {
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: draw-check 0.5s cubic-bezier(0.65, 0, 0.45, 1) 0.5s forwards;
+        }
+        @keyframes draw-circle { to { stroke-dashoffset: 0; } }
+        @keyframes draw-check { to { stroke-dashoffset: 0; } }
+
+        /* --- Animated Cross (Spam) --- */
+        .cross-circle {
+            stroke-dasharray: 264;
+            stroke-dashoffset: 264;
+            animation: draw-circle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+        .cross-line1, .cross-line2 {
+            stroke-dasharray: 47;
+            stroke-dashoffset: 47;
+        }
+        .cross-line1 {
+            animation: draw-check 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.5s forwards;
+        }
+        .cross-line2 {
+            animation: draw-check 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.7s forwards;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: var(--secondary-color);
+            margin-bottom: 2.5rem;
+        }
+
+        a.button {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            background: var(--primary-color);
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+
+        a.button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px var(--shadow-color);
+        }
+        
+        body.safe a.button { color: var(--gradient-start-safe); }
+        body.spam a.button { color: var(--gradient-start-spam); }
+
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            p {
+                font-size: 1.1rem;
+            }
+            .card {
+                padding: 2.5rem 2rem;
+            }
+        }
+    </style>
+</head>
+<!-- 
+  The class on the body tag will be set by the Jinja2 template.
+  This allows the CSS to apply different themes (colors, etc.) based on the prediction result.
+-->
+<body class="{% if prediction=='0' %}safe{% else %}spam{% endif %}">
+    
+    <div class="container">
+        <div class="card">
+            
+            <!-- Jinja2 templating logic to show the correct result -->
+            {% if prediction=="0" %}
+                <!-- This is for "Not Spam" (Ham) -->
+                <div class="result-icon">
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                        <circle class="checkmark-circle" cx="50" cy="50" r="42" fill="none" stroke="#FFFFFF" stroke-width="5"/>
+                        <polyline class="checkmark-check" points="30,52 45,67 70,37" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h1>Not Spam</h1>
+                <p>This message looks safe!</p>
+            
+            {% else %}
+                <!-- This is for "Spam" -->
+                <div class="result-icon">
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                        <circle class="cross-circle" cx="50" cy="50" r="42" fill="none" stroke="#FFFFFF" stroke-width="5"/>
+                        <line class="cross-line1" x1="35" y1="35" x2="65" y2="65" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+                        <line class="cross-line2" x1="65" y1="35" x2="35" y2="65" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h1>Spam Detected</h1>
+                <p>This message seems suspicious.</p>
+            
+            {% endif %}
+
+            <a href="/" class="button">Check Another</a>
+        </div>
+    </div>
+
+</body>
+</html>

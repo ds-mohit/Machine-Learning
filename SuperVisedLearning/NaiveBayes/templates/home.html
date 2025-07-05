@@ -1,0 +1,226 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spam Identifier</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Stop Spam in Its Tracks</h1>
+        <p>Enter your email content below to check if it's spam:</p>
+        <form action="{{ url_for('predict') }}" method="post" id="spam-form">
+            <textarea id="email-content" name="mesg" rows="10" cols="50" placeholder="Paste your email content here..."></textarea>
+            <button type="submit">Check for Spam</button>
+            <div id="result"></div> </form>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spam Detection </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #ffffff;
+            --secondary-color: #e0e0e0;
+            --accent-color: #6a11cb;
+            --gradient-start: #6a11cb;
+            --gradient-end: #2575fc;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --font-family: 'Poppins', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: linear-gradient(-45deg, var(--gradient-end), var(--gradient-start), #2575fc, #6a11cb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+            animation-delay: 0.2s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2.5rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 var(--shadow-color);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+        
+        /* Typewriter effect */
+        .typewriter {
+            border-right: .15em solid var(--primary-color);
+            white-space: nowrap;
+            overflow: hidden;
+            animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: var(--primary-color); }
+        }
+
+        p {
+            font-size: 1.1rem;
+            font-weight: 300;
+            color: var(--secondary-color);
+            margin-bottom: 2rem;
+        }
+
+        textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            font-family: var(--font-family);
+            color: var(--primary-color);
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 150px;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary-color);
+            color: var(--gradient-start);
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px var(--shadow-color);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            p {
+                font-size: 1rem;
+            }
+            .card {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1 id="main-title"></h1>
+            <p>Enter any text below to check if it's spam or not.</p>
+            <!-- This form action uses Jinja2 templating for Flask. It will be rendered by the server. -->
+            <form action="{{ url_for('predict') }}" method="post" id="spam-form">
+                <textarea id="email-content" name="mesg" rows="10" placeholder="Paste your message here..."></textarea>
+                <button type="submit">Analyze Text</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Typewriter Effect ---
+            const titleText = "Spam Detection AI";
+            const titleElement = document.getElementById('main-title');
+            let i = 0;
+
+            function typeWriter() {
+                if (i < titleText.length) {
+                    titleElement.innerHTML += titleText.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, 90);
+                } else {
+                    // Once typing is done, add the class that enables the cursor blink
+                    titleElement.classList.add('typewriter');
+                }
+            }
+            
+            // Start the animation after a short delay
+            setTimeout(typeWriter, 500);
+        });
+    </script>
+</body>
+</html>
