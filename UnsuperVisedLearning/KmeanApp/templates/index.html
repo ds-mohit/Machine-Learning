@@ -2,76 +2,159 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crop Prediction System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         body {
-            background: #f5f7fa;
+            background-color: #f0f4f8;
+            font-family: 'Poppins', sans-serif;
+            color: #333;
         }
-        .container {
-            max-width: 900px;
+        .header {
+            color: #2c5e2e;
+            font-weight: 600;
+        }
+        .main-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        .btn-predict {
+            background-color: #4CAF50;
+            border-color: #4CAF50;
+            font-weight: 500;
+            padding: 12px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+        .btn-predict:hover {
+            background-color: #45a049;
         }
         .form-control {
-            margin-bottom: 15px;
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #ddd;
         }
-        .card img {
-            height: 200px;
+        .form-control:focus {
+            box-shadow: 0 0 0 0.25rem rgba(76, 175, 80, 0.2);
+            border-color: #4CAF50;
+        }
+        #result-section {
+            min-height: 100px;
+        }
+        .result-card {
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+        .result-card img {
+            height: 180px;
             object-fit: cover;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
         }
-        .result-header {
-            margin-top: 40px;
-            margin-bottom: 20px;
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
         }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="text-center text-primary mb-4">🌾 Crop Prediction System</h1>
-        <div class="card shadow p-4 mb-5">
-            <form action="{{ url_for('predict') }}" method="post">
-                <div class="row">
+    <div class="container my-5" style="max-width: 800px;">
+        <h1 class="text-center mb-4 header">🌾 Advanced Crop Prediction</h1>
+        <div class="card main-card p-4 p-lg-5">
+            <form id="prediction-form">
+                <div class="row g-3">
                     <div class="col-md-4"><input name="nitrogen" type="number" class="form-control" placeholder="Nitrogen (N)" required></div>
                     <div class="col-md-4"><input name="phosphorus" type="number" class="form-control" placeholder="Phosphorus (P)" required></div>
                     <div class="col-md-4"><input name="potassium" type="number" class="form-control" placeholder="Potassium (K)" required></div>
+                    <div class="col-md-6"><input name="temperature" type="number" step="any" class="form-control" placeholder="Temperature (°C)" required></div>
+                    <div class="col-md-6"><input name="humidity" type="number" step="any" class="form-control" placeholder="Humidity (%)" required></div>
+                    <div class="col-md-6"><input name="ph" type="number" step="any" class="form-control" placeholder="pH Level" required></div>
+                    <div class="col-md-6"><input name="rainfall" type="number" step="any" class="form-control" placeholder="Rainfall (mm)" required></div>
                 </div>
-                <div class="row">
-                    <div class="col-md-6"><input name="temperature" type="number" class="form-control" placeholder="Temperature (°C)" step="any" required></div>
-                    <div class="col-md-6"><input name="humidity" type="number" class="form-control" placeholder="Humidity (%)" step="any" required></div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6"><input name="ph" type="number" class="form-control" placeholder="pH Level" step="any" required></div>
-                    <div class="col-md-6"><input name="rainfall" type="number" class="form-control" placeholder="Rainfall (mm)" step="any" required></div>
-                </div>
-                <button type="submit" class="btn btn-success btn-lg btn-block mt-3">🌱 Predict Crop</button>
+                <button type="submit" class="btn btn-predict btn-lg w-100 mt-4">🌱 Predict Crop</button>
             </form>
         </div>
 
-        {% if dt %}
-            <h3 class="text-center text-success result-header">🌿 Recommended Crops:</h3>
-            <div class="row row-cols-1 row-cols-md-3 g-4">
-                {% set found = false %}
-                {% for crop, count in dt.items() %}
-                    {% if count >= 50 %}
-                        {% set found = true %}
+        <div id="result-section" class="mt-5">
+            </div>
+    </div>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', async function (e) {
+            e.preventDefault(); // Prevent the default page reload
+
+            const resultSection = document.getElementById('result-section');
+            const form = e.target;
+            const formData = new FormData(form);
+
+            // Show a loading spinner
+            resultSection.innerHTML = `
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+
+            try {
+                const response = await fetch("{{ url_for('predict') }}", {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Server error occurred.');
+                }
+
+                const data = await response.json();
+                displayResults(data);
+
+            } catch (error) {
+                resultSection.innerHTML = `<div class="alert alert-danger text-center">⚠️ Error: ${error.message}</div>`;
+            }
+        });
+
+        function displayResults(data) {
+            const resultSection = document.getElementById('result-section');
+            let resultHTML = '<h3 class="text-center text-success mb-4">🌿 Recommended Crops:</h3>';
+            
+            const crops = Object.entries(data)
+                                .filter(([_, count]) => count >= 50)
+                                .sort(([, a], [, b]) => b - a);
+
+            if (crops.length === 0) {
+                resultHTML += `<p class="text-center text-muted">No highly recommended crops found for the given conditions. Try different values.</p>`;
+            } else {
+                resultHTML += '<div class="row row-cols-1 row-cols-md-3 g-4">';
+                crops.forEach(([crop, count]) => {
+                    const cropName = crop.charAt(0).toUpperCase() + crop.slice(1);
+                    const imageUrl = `/static/images/${crop.toLowerCase()}.jpg`;
+                    resultHTML += `
                         <div class="col">
-                            <div class="card h-100 shadow-sm">
-                                <img src="{{ url_for('static', filename='images/' + crop.lower() + '.jpg') }}"
-                                     onerror="this.src='{{ url_for('static', filename='images/' + crop.lower() + '.png') }}'"
-                                     class="card-img-top" alt="{{ crop }}">
+                            <div class="card h-100 result-card">
+                                <img src="${imageUrl}" class="card-img-top" alt="${cropName}" onerror="this.src='/static/images/default.png'; this.onerror=null;">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title">{{ crop.title() }}</h5>
-                                    <p class="card-text text-muted">Confidence: {{ count }}</p>
+                                    <h5 class="card-title">${cropName}</h5>
+                                    <p class="card-text text-muted">Confidence: ${count}</p>
                                 </div>
                             </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-                {% if not found %}
-                    <p class="text-danger text-center">⚠️ No crops found with confidence ≥ 50</p>
-                {% endif %}
-            </div>
-        {% endif %}
-    </div>
+                        </div>`;
+                });
+                resultHTML += '</div>';
+            }
+            resultSection.innerHTML = resultHTML;
+        }
+    </script>
 </body>
 </html>
-
